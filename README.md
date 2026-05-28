@@ -8,4 +8,6 @@ Pick whichever combination fits what you're doing:
 - **Reset on XP drop** — good for AFK skilling (redwoods, etc.)
 - **Reset on hitsplat received** — good for NMZ absorptions where you're not gaining XP
 - **Reset on any player input** — catch-all for anything where you're clicking around (slayer, etc.)
- 
+
+## AI Disclosure
+Claude helped write this but this was not a "prompt and forget" project.
