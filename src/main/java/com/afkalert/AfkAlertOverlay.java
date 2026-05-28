@@ -11,9 +11,9 @@ import net.runelite.client.ui.overlay.components.LineComponent;
 public class AfkAlertOverlay extends OverlayPanel
 {
 	private static final int FLASH_PERIOD_MS = 600;
-	private static final Color COUNTDOWN_SAFE   = new Color(255, 255, 255, 180);
-	private static final Color COUNTDOWN_WARN   = new Color(255, 180,   0, 220);
-	private static final Color COUNTDOWN_URGENT = new Color(255,  50,  50, 255);
+	private static final Color COUNTDOWN_SAFE = new Color(255, 255, 255, 180);
+	private static final Color COUNTDOWN_WARN = new Color(255, 180, 0, 220);
+	private static final Color COUNTDOWN_URGENT = new Color(255, 50, 50, 255);
 
 	private final AfkAlertPlugin plugin;
 	private final AfkAlertConfig config;
@@ -39,7 +39,6 @@ public class AfkAlertOverlay extends OverlayPanel
 
 		if (plugin.isAlertFired())
 		{
-			// Blink — hide the panel on the off phase
 			long phase = (System.currentTimeMillis() / FLASH_PERIOD_MS) % 2;
 			if (phase == 0)
 			{
