@@ -3,6 +3,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+.gradle
+build-output.txt
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws
