@@ -4,7 +4,6 @@ import com.google.inject.Provides;
 import java.time.Duration;
 import java.time.Instant;
 import javax.inject.Inject;
-import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
 import net.runelite.api.events.GameTick;
@@ -42,10 +41,14 @@ public class AfkAlertPlugin extends Plugin
 
 	private Instant lastActivity = Instant.now();
 
-	@Getter
 	private boolean alertFired = false;
 
 	private Instant lastNotified = Instant.MIN;
+
+	public boolean isAlertFired()
+	{
+		return alertFired;
+	}
 
 	@Override
 	protected void startUp()
