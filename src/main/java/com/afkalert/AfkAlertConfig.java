@@ -3,6 +3,7 @@ package com.afkalert;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
 
@@ -11,11 +12,21 @@ public interface AfkAlertConfig extends Config
 {
 	String GROUP = "afkalert";
 
+	// ── Sections ───────────────────────────────────────────────────────────
+
+	@ConfigSection(
+		name = "Notification Settings",
+		description = "Tray notification settings.",
+		position = 5,
+		closedByDefault = false
+	)
+	String notificationsSection = "notifications";
+
 	// ── Timer ──────────────────────────────────────────────────────────────
 
 	@ConfigItem(
 		keyName = "timerDuration",
-		name = "Timer duration (seconds)",
+		name = "Timer duration",
 		description = "Seconds of inactivity before the alert fires. Default 1140 = 19 min (just before the 20-min logout).",
 		position = 0
 	)
@@ -36,38 +47,16 @@ public interface AfkAlertConfig extends Config
 	)
 	default boolean resetOnXpDrop()
 	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "resetOnAnimation",
-		name = "Reset on player animation",
-		description = "Resets the timer when the player's animation changes (attack swing, skill action, etc.).",
-		position = 2
-	)
-	default boolean resetOnAnimation()
-	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
 		keyName = "resetOnHitsplat",
 		name = "Reset on hitsplat received",
 		description = "Resets the timer when the player takes damage (auto-retaliate would engage).",
-		position = 3
+		position = 2
 	)
 	default boolean resetOnHitsplat()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "resetOnInteract",
-		name = "Reset on NPC interaction",
-		description = "Resets the timer when the player targets an NPC (click-to-attack, auto-retaliate pick).",
-		position = 4
-	)
-	default boolean resetOnInteract()
 	{
 		return false;
 	}
@@ -76,11 +65,11 @@ public interface AfkAlertConfig extends Config
 		keyName = "resetOnMenuClick",
 		name = "Reset on any player input",
 		description = "Catch-all: resets the timer on any menu click or player-initiated action in the game world.",
-		position = 5
+		position = 3
 	)
 	default boolean resetOnMenuClick()
 	{
-		return false;
+		return true;
 	}
 
 	// ── Alerts ────────────────────────────────────────────────────────────
@@ -89,7 +78,8 @@ public interface AfkAlertConfig extends Config
 		keyName = "sendNotification",
 		name = "Send tray notification",
 		description = "Sends a RuneLite notification popup when the timer expires.",
-		position = 6
+		position = 0,
+		section = notificationsSection
 	)
 	default boolean sendNotification()
 	{
@@ -97,10 +87,34 @@ public interface AfkAlertConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "repeatNotification",
+		name = "Repeat notification",
+		description = "Re-fires the tray notification (and flashes the taskbar) repeatedly until you act.",
+		position = 1,
+		section = notificationsSection
+	)
+	default boolean repeatNotification()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "repeatInterval",
+		name = "Repeat interval",
+		description = "How often to re-fire the notification while you're still idle.",
+		position = 2,
+		section = notificationsSection
+	)
+	default RepeatInterval repeatInterval()
+	{
+		return RepeatInterval.SECONDS_30;
+	}
+
+	@ConfigItem(
 		keyName = "showCountdown",
 		name = "Show countdown timer",
 		description = "Shows remaining time in the corner; blinks when the alert fires.",
-		position = 7
+		position = 4
 	)
 	default boolean showCountdown()
 	{

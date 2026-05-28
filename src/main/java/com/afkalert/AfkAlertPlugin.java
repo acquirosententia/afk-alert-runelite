@@ -4,15 +4,10 @@ import com.google.inject.Provides;
 import java.time.Duration;
 import java.time.Instant;
 import javax.inject.Inject;
-import lombok.Getter;
-import net.runelite.api.Actor;
 import net.runelite.api.Client;
-import net.runelite.api.NPC;
 import net.runelite.api.Player;
-import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
-import net.runelite.api.events.InteractingChanged;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.StatChanged;
 import net.runelite.client.config.ConfigManager;
@@ -44,15 +39,14 @@ public class AfkAlertPlugin extends Plugin
 	@Inject
 	private AfkAlertOverlay overlay;
 
-	/** Wall-clock time of the last activity that resets the timer. */
-	@Getter
 	private Instant lastActivity = Instant.now();
 
-	/** True once the alert has fired for the current idle window (prevents spam). */
-	@Getter
 	private boolean alertFired = false;
 
-	public boolean isAlertFired() {
+	private Instant lastNotified = Instant.MIN;
+
+	public boolean isAlertFired()
+	{
 		return alertFired;
 	}
 
@@ -69,46 +63,55 @@ public class AfkAlertPlugin extends Plugin
 		overlayManager.remove(overlay);
 	}
 
-	// ── Public helpers used by the overlay ────────────────────────────────
-
-	/** Seconds remaining before the alert fires; negative means already expired. */
 	public long secondsRemaining()
 	{
 		long elapsed = Duration.between(lastActivity, Instant.now()).getSeconds();
 		return config.timerDuration() - elapsed;
 	}
 
-	/** Milliseconds remaining — used by the overlay for sub-second precision. */
 	public long millisRemaining()
 	{
 		long elapsed = Duration.between(lastActivity, Instant.now()).toMillis();
 		return (long) config.timerDuration() * 1000 - elapsed;
 	}
 
-	// ── Internal ──────────────────────────────────────────────────────────
-
 	void resetTimer()
 	{
 		lastActivity = Instant.now();
 		alertFired = false;
+		lastNotified = Instant.MIN;
 	}
-
-	// ── Game tick: check expiry ────────────────────────────────────────────
 
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-		if (!alertFired && secondsRemaining() <= 0)
+		if (secondsRemaining() > 0)
+		{
+			return;
+		}
+
+		if (!alertFired)
 		{
 			alertFired = true;
-			if (config.sendNotification())
-			{
-				notifier.notify("AFK Alert: you've been idle too long!");
-			}
+			sendNotification();
+			return;
+		}
+
+		if (config.repeatNotification()
+			&& Duration.between(lastNotified, Instant.now()).getSeconds() >= config.repeatInterval().getSeconds())
+		{
+			sendNotification();
 		}
 	}
 
-	// ── Reset triggers ────────────────────────────────────────────────────
+	private void sendNotification()
+	{
+		lastNotified = Instant.now();
+		if (config.sendNotification())
+		{
+			notifier.notify("AFK Alert: you've been idle too long!");
+		}
+	}
 
 	@Subscribe
 	public void onStatChanged(StatChanged event)
@@ -116,23 +119,6 @@ public class AfkAlertPlugin extends Plugin
 		if (config.resetOnXpDrop())
 		{
 			resetTimer();
-		}
-	}
-
-	@Subscribe
-	public void onAnimationChanged(AnimationChanged event)
-	{
-		if (!config.resetOnAnimation())
-		{
-			return;
-		}
-		Actor actor = event.getActor();
-		if (actor instanceof Player && actor == client.getLocalPlayer())
-		{
-			if (actor.getAnimation() != -1)
-			{
-				resetTimer();
-			}
 		}
 	}
 
@@ -149,24 +135,6 @@ public class AfkAlertPlugin extends Plugin
 		}
 	}
 
-	@Subscribe
-	public void onInteractingChanged(InteractingChanged event)
-	{
-		if (!config.resetOnInteract())
-		{
-			return;
-		}
-		if (event.getSource() == client.getLocalPlayer() && event.getTarget() instanceof NPC)
-		{
-			resetTimer();
-		}
-	}
-
-	/**
-	 * MenuOptionClicked fires on every player-initiated action in the game world —
-	 * clicking an NPC, object, item, spell, prayer, etc. Good catch-all for
-	 * "any input the player made that would reset auto-retaliate."
-	 */
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
